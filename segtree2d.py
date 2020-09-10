@@ -125,3 +125,83 @@ class SegmentTree1D:
             nr=2*nid+2
             self.arrHelp(A,nl,nx0,m,nlazy)
             self.arrHelp(A,nr,m+1,nx1,nlazy)
+
+class BruteForce2D:
+    def __init__(self,A,uo,ui,qo,qi):
+        self.N=len(A)
+        self.M=len(A[0])
+        self.uo=uo #update operation
+        self.ui=ui #update identity (can be created artificially)
+        self.qo=qo #query operation
+        self.qi=qi #query identity
+        self.A=[[v for v in row] for row in A]
+    def U(self,x0,x1,y0,y1,v):
+        for i in range(x0,x1+1):
+            for j in range(y0,y1+1):
+                self.A[i][j]=self.uo(self.A[i][j],v)
+    def Q(self,x0,x1,y0,y1):
+        out=self.qi
+        for i in range(x0,x1+1):
+            for j in range(y0,y1+1):
+                out=qo(out,self.A[i][j])
+        return out
+
+#speedtest
+uo=lambda a,b:a+b
+ui=0
+qo=uo
+qi=ui
+uor=lambda v,k:v*k
+N=1000
+M=1000
+UQ=10000
+MV=1_000_000
+print("N={},M={},UQ={},MV={}".format(N,M,UQ,MV))
+testBF=True
+rnd.seed(1)
+A=[[rnd.randint(-MV,MV) for j in range(M)] for i in range(N)]
+'''for r in A:
+    print(r)
+print('')'''
+actions=[]
+for i in range(UQ):
+    t=rnd.randrange(2)
+    i0=rnd.randrange(N)
+    i1=rnd.randrange(N)
+    x0=min(i0,i1)
+    x1=max(i0,i1)
+    i0=rnd.randrange(M)
+    i1=rnd.randrange(M)
+    y0=min(i0,i1)
+    y1=max(i0,i1)
+    act=[t,x0,x1,y0,y1]
+    if t==0:
+        act.append(rnd.randint(-MV,MV))
+    actions.append(act)
+
+def results2D(actions,ds):
+    out=[]
+    for a in actions:
+        if a[0]==0:
+            ds.U(a[1],a[2],a[3],a[4],a[5])
+        else:
+            out.append(ds.Q(a[1],a[2],a[3],a[4]))
+    return out
+
+if testBF:
+    stt=time.time()
+    bf=BruteForce2D(A,uo,ui,qo,qi)
+    print('bf init time='+str(time.time()-stt))
+    stt=time.time()
+    bfRet=results2D(actions,bf)
+    print('bf run time='+str(time.time()-stt))
+
+stt=time.time()
+st=SegmentTreeFast2D(A,uo,ui,qo,qi,uor)
+print('st init time='+str(time.time()-stt))
+stt=time.time()
+stRet=results2D(actions,st)
+print('st run time='+str(time.time()-stt))
+
+if testBF:
+    print('st '+('good' if bfRet==stRet else 'mismatch'))
